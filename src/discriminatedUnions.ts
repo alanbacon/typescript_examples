@@ -54,6 +54,7 @@ type GenericTypeUnion<T extends Classifier> = {
 function genericFunction3<T extends Classifier>(
   input: GenericTypeUnion<T> // GenericType<'fooString'> | GenericType<'barNumber'>
 ): ClassifierTypeMap[T] {
+  // we also have to change our if statement logic into a Record of functions instead :(
   const branches: {
     [CT in Classifier]: (input: GenericTypeUnion<CT>) => ClassifierTypeMap[CT];
   } = {
