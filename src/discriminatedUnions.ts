@@ -9,9 +9,12 @@ type GenericType<T extends Classifier> = {
   value: ClassifierType<T>;
 };
 
+/////////////////////// Attempt 1 //////////////////////////////////////////////////////////////////////////////////////
+
 function genericFunction1<T extends Classifier>(
   input: GenericType<T> // GenericType<'fooString' | 'barNumber'>
 ): ClassifierType<T> {
+  // TS is not able to infer the type input.value based on the input.classifier variable :(
   if (input.classifier === 'fooString') {
     return input.value[0];
   } else {
@@ -19,9 +22,10 @@ function genericFunction1<T extends Classifier>(
   }
 }
 
+// intelisense knows that the type of val1 is a string, based on the classifier value!
 const val1 = genericFunction1({ classifier: 'fooString', value: 'foo' });
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////// Attempt 2 //////////////////////////////////////////////////////////////////////////////////////
 
 function genericFunction2(
   input: GenericType<'fooString'> | GenericType<'barNumber'>
@@ -36,7 +40,7 @@ function genericFunction2(
 // but intelisense now thinks (and TS allows) val2 to be string | number, whereas we want to narrow it to just string
 const val2 = genericFunction2({ classifier: 'fooString', value: 'foo' });
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////// Attempt 3 //////////////////////////////////////////////////////////////////////////////////////
 
 type ClassifierTypeMap = {
   [K in Classifier]: GenericType<K>['value'];
