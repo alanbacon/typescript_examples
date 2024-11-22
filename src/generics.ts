@@ -72,8 +72,8 @@ type ClassifierType<T extends Classifier> = T extends 'fooString'
   : number;
 
 type GenericType<T extends Classifier> = {
-  classifier: T;
-  value: ClassifierType<T>;
+  classifier: T; // 'fooString' | 'barNumber'
+  value: ClassifierType<T>; // string | number
 };
 
 function extractValue<T extends Classifier>(
