@@ -1,4 +1,4 @@
-import { Satisfies } from './type_utils';
+import { ExtentionSatisfiesBase } from './type_utils';
 
 // make a weird type to use in examples
 class WeirdClass {
@@ -18,7 +18,7 @@ type BaseType = {
   mustHaveBar: number;
 };
 
-type UsefulTypeSatisifies = Satisfies<
+type UsefulTypeSatisifies = ExtentionSatisfiesBase<
   BaseType,
   {
     mustHaveFoo: boolean;
@@ -47,7 +47,7 @@ interface RestrictedBaseType extends Record<string, AllowedDbType> {
 
 // then the Satisfies type can be used to ensure that only AllowedDbTypes exist on the type
 
-type RestrictedUsefulTypeWithError = Satisfies<
+type RestrictedUsefulTypeWithError = ExtentionSatisfiesBase<
   RestrictedBaseType,
   {
     mustHaveFoo: boolean;
@@ -56,7 +56,7 @@ type RestrictedUsefulTypeWithError = Satisfies<
   }
 >;
 
-type RestrictedUsefulTypeOK = Satisfies<
+type RestrictedUsefulTypeOK = ExtentionSatisfiesBase<
   RestrictedBaseType,
   {
     mustHaveFoo: boolean;
@@ -64,3 +64,21 @@ type RestrictedUsefulTypeOK = Satisfies<
     anotherProp: string;
   }
 >;
+
+// if you want to work directly with objects instead of types, you can use the `satisfies` operator
+
+const unacceptableObjectInstance = {
+    mustHaveFoo: false,
+    mustHaveBar: 3,
+    anotherProp: new WeirdClass(),
+  } satisfies RestrictedBaseType;
+
+const acceptableObjectInstance = {
+    mustHaveFoo: false,
+    mustHaveBar: 3,
+    stringProp: 's',
+  } satisfies RestrictedBaseType;
+
+// intellisense knows stringProp is now a string
+// it isnt only aware of the RestrictedBaseType type, but also any extra properties that are added
+acceptableObjectInstance.stringProp = 9;
