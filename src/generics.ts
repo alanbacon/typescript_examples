@@ -17,7 +17,7 @@ const val3 = identity<string>(9); // TS now complains that the input isn't of th
 
 ////////////////////////////////////////////////////////////////////
 
-// narrowing (the second way the extends keyword can be used)
+// narrowing/contraint (the second way the extends keyword can be used)
 
 function useFooProp<Type extends { foo: number }>(arg: Type): Type {
   console.log(arg.foo);
