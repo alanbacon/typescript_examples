@@ -1,6 +1,35 @@
+/////////////////////// Example from docs ///////////////////////////////////////////////////////////////////////////////
+
+type FooString = {
+  classifier: 'fooString';
+  value: string;
+};
+type BarNumber = {
+  classifier: 'barNumber';
+  value: number;
+};
+type FooOrBarType = FooString | BarNumber;
+
+function extractValue(input: FooOrBarType): string | number {
+  if (input.classifier === 'fooString') { // narrowing
+    return input.value[0]; // TS knows value is a string
+  } else {
+    return input.value + 1; // TS knows value is a number
+  }
+}
+
+// val0 could be a string or a number (because return type of function isn't tied to the input type),
+// but we want it to definitely be a string, because the input.classifier is 'fooString'
+const val0 = extractValue({
+  classifier: 'fooString',
+  value: 'foo',
+});
+
+/////////////////////// Tighten everything up //////////////////////////////////////////////////////////////////////////
+
 type Classifier = 'fooString' | 'barNumber';
 
-type ClassifierType<T extends Classifier> = T extends 'fooString'
+type ClassifierType<T extends Classifier> = T extends 'fooString' // conditional use of extends
   ? string
   : number;
 
@@ -81,9 +110,9 @@ const val3 = genericFunction3({
 
 // more real world example
 
-type Unit = 'feetInches' | 'meters';
+type Unit = 'imperial' | 'metric';
 
-type UnitMeasurement<U extends Unit> = U extends 'feetInches'
+type UnitMeasurement<U extends Unit> = U extends 'imperial'
   ? { feet: number; inches: number }
   : { cm: number; m: number };
 
@@ -103,7 +132,7 @@ function multiplyHeight<U extends Unit>(
   const branches: {
     [U in Unit]: (height: HeightUnion<U>, multiple: number) => HeightUnion<U>;
   } = {
-    feetInches: (height, multiple) => {
+    imperial: (height, multiple) => {
       const { majorUnitAmount, minorUnitAmount } = multiplyCompoundUnit({
         startingAmount: {
           majorUnitAmount: height.measurement.feet,
@@ -120,7 +149,7 @@ function multiplyHeight<U extends Unit>(
         },
       };
     },
-    meters: (height, multiple) => {
+    metric: (height, multiple) => {
       const { majorUnitAmount, minorUnitAmount } = multiplyCompoundUnit({
         startingAmount: {
           majorUnitAmount: height.measurement.m,
@@ -160,7 +189,7 @@ function multiplyCompoundUnit(args: {
 }
 
 const multipledMeters = multiplyHeight(
-  { unit: 'meters', measurement: { m: 2, cm: 60 } },
+  { unit: 'metric', measurement: { m: 2, cm: 60 } },
   2
 );
 // 5.20m
@@ -169,10 +198,54 @@ console.log(
 );
 
 const multipledFeet = multiplyHeight(
-  { unit: 'feetInches', measurement: { feet: 3, inches: 5 } },
+  { unit: 'imperial', measurement: { feet: 3, inches: 5 } },
   3
 );
 // 10'3"
 console.log(
   `${multipledFeet.measurement.feet}'${multipledFeet.measurement.inches}"`
 );
+
+// comparing with using a simpler union type for measurement like we had in the very first example from the TS docs:
+// we can use a simpler IF syntax but the type safety is not as good
+
+type Imperial = {
+  classifier: 'imperial';
+  feet: number;
+  inches: number;
+}
+ 
+type Metric = {
+  classifier: "metric";
+  meters: number;
+  centimeters: number;
+}
+ 
+type Measurement = Imperial | Metric;
+
+function mulitplyMeasurement(
+  measurement: Measurement,
+  multiplier: number
+): Measurement {
+  if (measurement.classifier === 'imperial') {
+    const multple = multiplyCompoundUnit({
+      startingAmount: {
+        majorUnitAmount: measurement.feet,
+        minorUnitAmount: measurement.inches},
+      majorMinorRatio: 12,
+      multiple: multiplier,
+    });
+    return {classifier: 'imperial', feet: multple.majorUnitAmount, inches: multple.minorUnitAmount};
+  } else {
+    const multple = multiplyCompoundUnit({
+      startingAmount: {
+        majorUnitAmount: measurement.meters,
+        minorUnitAmount: measurement.centimeters},
+      majorMinorRatio: 1000,
+      multiple: multiplier,
+    });
+    // there is poor type safety here, because TS doesn't know that the return type is different based on the classifier value
+    // this is wrong, it should be 'metric' not 'imperial'
+    return {classifier: 'imperial', feet: multple.majorUnitAmount, inches: multple.minorUnitAmount}; 
+  }
+}
