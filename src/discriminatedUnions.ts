@@ -71,6 +71,8 @@ const val2 = genericFunction2({ classifier: 'fooString', value: 'foo' });
 
 /////////////////////// Attempt 3 //////////////////////////////////////////////////////////////////////////////////////
 
+// we have to change our if statement logic into a Record of functions instead :(
+
 type ClassifierTypeMap = {
   [K in Classifier]: GenericType<K>['value'];
 };
@@ -81,16 +83,12 @@ type ClassifierTypeMap = {
 //   barNumber: number;
 // };
 
-type GenericTypeUnion<T extends Classifier> = {
-  [K in T]: GenericType<K>;
-}[T];
-
 function genericFunction3<T extends Classifier>(
-  input: GenericTypeUnion<T> // GenericType<'fooString'> | GenericType<'barNumber'>
+  input: GenericType<T> // GenericType<'fooString'> | GenericType<'barNumber'>
 ): ClassifierTypeMap[T] {
-  // we also have to change our if statement logic into a Record of functions instead :(
+  
   const branches: {
-    [CT in Classifier]: (input: GenericTypeUnion<CT>) => ClassifierTypeMap[CT];
+    [CT in Classifier]: (input: GenericType<CT>) => ClassifierTypeMap[CT];
   } = {
     fooString: (input) => {
       return input.value[0]; // TS knows value is a string and return must be a string
@@ -130,16 +128,12 @@ type Height<U extends Unit> = {
   measurement: UnitMeasurement[U];
 };
 
-type HeightUnion<U extends Unit> = {
-  [K in U]: Height<K>;
-}[U];
-
 function multiplyHeight<U extends Unit>(
-  height: HeightUnion<U>,
+  height: Height<U>,
   multiple: number
-): HeightUnion<U> {
+): Height<U> {
   const branches: {
-    [U in Unit]: (height: HeightUnion<U>, multiple: number) => HeightUnion<U>;
+    [U in Unit]: (height: Height<U>, multiple: number) => Height<U>;
   } = {
     imperial: (height, multiple) => {
       const { majorUnitAmount, minorUnitAmount } = multiplyCompoundUnit({
