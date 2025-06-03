@@ -73,22 +73,12 @@ const val2 = genericFunction2({ classifier: 'fooString', value: 'foo' });
 
 // we have to change our if statement logic into a Record of functions instead :(
 
-type ClassifierTypeMap = {
-  [K in Classifier]: GenericType<K>['value'];
-};
-
-// the above is a more concise way to write the same thing as below
-// type ClassifierTypeMap = {
-//   fooString: string;
-//   barNumber: number;
-// };
-
 function genericFunction3<T extends Classifier>(
   input: GenericType<T> // GenericType<'fooString'> | GenericType<'barNumber'>
-): ClassifierTypeMap[T] {
+): ClassifierType<T> {
   
   const branches: {
-    [CT in Classifier]: (input: GenericType<CT>) => ClassifierTypeMap[CT];
+    [CT in Classifier]: (input: GenericType<CT>) => ClassifierType<CT>;
   } = {
     fooString: (input) => {
       return input.value[0]; // TS knows value is a string and return must be a string
