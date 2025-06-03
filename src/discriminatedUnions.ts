@@ -10,7 +10,7 @@ type BarNumber = {
 };
 type FooOrBarType = FooString | BarNumber;
 
-function extractValue(input: FooOrBarType): string | number {
+function extractValue(input: FooOrBarType): FooOrBarType['value'] {
   if (input.classifier === 'fooString') { // narrowing
     return input.value[0]; // TS knows value is a string
   } else {
