@@ -32,20 +32,20 @@ const val0 = extractValue({
 
 type Classifier = 'fooString' | 'barNumber'
 
-type ClassifierType<T extends Classifier> = T extends 'fooString' // conditional use of extends
+type ClassifierValue<T extends Classifier> = T extends 'fooString' // conditional use of extends
   ? string
   : number;
 
-type GenericType<T extends Classifier> = {
+type DiscriminatedUnion<T extends Classifier> = {
   classifier: T;
-  value: ClassifierType<T>;
+  value: ClassifierValue<T>;
 };
 
 /////////////////////// Attempt 1 //////////////////////////////////////////////////////////////////////////////////////
 
 function genericFunction1<T extends Classifier>(
-  input: GenericType<T> // GenericType<'fooString' | 'barNumber'>
-): ClassifierType<T> {
+  input: DiscriminatedUnion<T> // DiscriminatedUnion<'fooString' | 'barNumber'>
+): ClassifierValue<T> {
   // TS is not able to infer the type input.value based on the input.classifier variable :(
   if (input.classifier === 'fooString') {
     return input.value[0];
@@ -60,7 +60,7 @@ const val1 = genericFunction1({ classifier: 'fooString', value: 'foo' });
 /////////////////////// Attempt 2 //////////////////////////////////////////////////////////////////////////////////////
 
 function genericFunction2(
-  input: GenericType<'fooString'> | GenericType<'barNumber'>
+  input: DiscriminatedUnion<'fooString'> | DiscriminatedUnion<'barNumber'>
 ): string | number {
   if (input.classifier === 'fooString') {
     return input.value[0];
@@ -80,11 +80,11 @@ const val2 = genericFunction2({ classifier: 'fooString', value: 'foo' });
 // and TS will complain if we don't handle it, so we can't forget to handle it
 
 function genericFunction3<T extends Classifier>(
-  input: GenericType<T>
-): ClassifierType<T> {
+  input: DiscriminatedUnion<T>
+): ClassifierValue<T> {
   
   const branches: {
-    [CT in Classifier]: (input: GenericType<CT>) => ClassifierType<CT>;
+    [CT in Classifier]: (input: DiscriminatedUnion<CT>) => ClassifierValue<CT>;
   } = {
     fooString: (input) => {
       return input.value[0]; // TS knows value is a string and return must be a string

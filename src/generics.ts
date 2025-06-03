@@ -1,4 +1,4 @@
-// most basic example
+// most basic example of using a type variable to create a generic function
 
 function identity<Type>(arg: Type): Type {
   return arg;
