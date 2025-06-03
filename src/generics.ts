@@ -15,9 +15,14 @@ const val3 = identity<string>(9); // TS now complains that the input isn't of th
 // this comes up often when we use reacts useState hook
 // const [state, setState] = useState<boolean>(false)
 
+// or when we use Promises:
+// function fetchData(url: string): Promise<ResponseType> { ... }
+
 ////////////////////////////////////////////////////////////////////
 
-// narrowing/contraint (the second way the extends keyword can be used)
+// narrowing/contraint 
+// (this second way the extends keyword can be used, the first way is
+// to simply extend an interface, we havn't discussed this yet)
 
 function useFooProp<Type extends { foo: number }>(arg: Type): Type {
   console.log(arg.foo);

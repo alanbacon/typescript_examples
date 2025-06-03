@@ -59,6 +59,8 @@ const val1 = genericFunction1({ classifier: 'fooString', value: 'foo' });
 
 /////////////////////// Attempt 2 //////////////////////////////////////////////////////////////////////////////////////
 
+// essentially the same as the example from the TS docs using our new types
+
 function genericFunction2(
   input: DiscriminatedUnion<'fooString'> | DiscriminatedUnion<'barNumber'>
 ): string | number {
@@ -112,7 +114,7 @@ type Unit = 'imperial' | 'metric';
 //   ? { feet: number; inches: number }
 //   : { cm: number; m: number };
 
-// this is a more flexible approach, but it needs to indexed differently
+// this is the more flexible approach, but it needs to indexed differently
 // UnitMeasurement[Unit] instead of UnitMeasurement<Unit>
 type UnitMeasurement = {
   imperial: { feet: number; inches: number };

@@ -30,7 +30,8 @@ type UsefulTypeSatisifies = Satisfies<
 // similar to writing:
 type UsefulTypeExtends = BaseType & { anotherProp: WeirdClass };
 
-// or
+// or 
+// (this is first way the extends keyword can be used):
 interface UsefulInterface extends BaseType {
   anotherProp: WeirdClass;
 }
