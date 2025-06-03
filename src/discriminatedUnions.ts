@@ -27,7 +27,10 @@ const val0 = extractValue({
 
 /////////////////////// Tighten everything up //////////////////////////////////////////////////////////////////////////
 
-type Classifier = 'fooString' | 'barNumber';
+// define the value AND the classifier using the same type variable, so that they are always in sync
+// this will allow us to more tightly define the return type of the function based on the input type
+
+type Classifier = 'fooString' | 'barNumber'
 
 type ClassifierType<T extends Classifier> = T extends 'fooString' // conditional use of extends
   ? string
@@ -72,9 +75,12 @@ const val2 = genericFunction2({ classifier: 'fooString', value: 'foo' });
 /////////////////////// Attempt 3 //////////////////////////////////////////////////////////////////////////////////////
 
 // we have to change our if statement logic into a Record of functions instead :(
+// but this is actually more type safe.
+// if we add a new classifier, we will have to add a new branch to the branches object,
+// and TS will complain if we don't handle it, so we can't forget to handle it
 
 function genericFunction3<T extends Classifier>(
-  input: GenericType<T> // GenericType<'fooString'> | GenericType<'barNumber'>
+  input: GenericType<T>
 ): ClassifierType<T> {
   
   const branches: {
@@ -198,6 +204,8 @@ const multipledFeet = multiplyHeight(
 console.log(
   `${multipledFeet.measurement.feet}'${multipledFeet.measurement.inches}"`
 );
+
+/////////////////////// Looking back ////////////////////////////////////////////////////////////////////////////////
 
 // comparing with using a simpler union type for measurement like we had in the very first example from the TS docs:
 // we can use a simpler IF syntax but the type safety is not as good
