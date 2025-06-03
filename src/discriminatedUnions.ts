@@ -75,6 +75,7 @@ type ClassifierTypeMap = {
   [K in Classifier]: GenericType<K>['value'];
 };
 
+// the above is a more concise way to write the same thing as below
 // type ClassifierTypeMap = {
 //   fooString: string;
 //   barNumber: number;
