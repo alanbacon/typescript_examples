@@ -112,13 +112,21 @@ const val3 = genericFunction3({
 
 type Unit = 'imperial' | 'metric';
 
-type UnitMeasurement<U extends Unit> = U extends 'imperial'
-  ? { feet: number; inches: number }
-  : { cm: number; m: number };
+// this is fine if there are only two units, but if there are more, we need to use a more flexible approach
+// type UnitMeasurement<U extends Unit> = U extends 'imperial'
+//   ? { feet: number; inches: number }
+//   : { cm: number; m: number };
+
+// this is a more flexible approach, but it needs to indexed differently
+// UnitMeasurement[Unit] instead of UnitMeasurement<Unit>
+type UnitMeasurement = {
+  imperial: { feet: number; inches: number };
+  metric: { cm: number; m: number };
+}
 
 type Height<U extends Unit> = {
   unit: U;
-  measurement: UnitMeasurement<U>;
+  measurement: UnitMeasurement[U];
 };
 
 type HeightUnion<U extends Unit> = {
