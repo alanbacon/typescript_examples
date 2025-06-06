@@ -20,7 +20,7 @@ export default [
       'linebreak-style': ['error', 'unix'],
       semi: ['error', 'always'],
       '@typescript-eslint/no-unused-vars': [
-        'warn',
+        'never',
         { argsIgnorePattern: '^_' },
       ],
     },
