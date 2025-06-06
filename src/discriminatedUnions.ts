@@ -11,7 +11,8 @@ type BarNumber = {
 type FooOrBarType = FooString | BarNumber;
 
 function extractValue(input: FooOrBarType): FooOrBarType['value'] {
-  if (input.classifier === 'fooString') { // narrowing
+  if (input.classifier === 'fooString') {
+    // narrowing
     return input.value[0]; // TS knows value is a string
   } else {
     return input.value + 1; // TS knows value is a number
@@ -30,10 +31,12 @@ const val0 = extractValue({
 // define the value AND the classifier using the same type variable, so that they are always in sync
 // this will allow us to more tightly define the return type of the function based on the input type
 
-type Classifier = 'fooString' | 'barNumber'
+type Classifier = 'fooString' | 'barNumber';
 
-type ClassifierValue<T extends Classifier> = T extends 'fooString' // conditional use of extends
-  ? string
+type ClassifierValue<T extends Classifier> = T extends 'fooString'
+  ? //                                        ^^^^^^^ conditional use of extends
+    //                ^^^^^^^ narrowing use of extends
+    string
   : number;
 
 type DiscriminatedUnion<T extends Classifier> = {
@@ -77,14 +80,19 @@ const val2 = genericFunction2({ classifier: 'fooString', value: 'foo' });
 /////////////////////// Attempt 3 //////////////////////////////////////////////////////////////////////////////////////
 
 // we have to change our if statement logic into a Record of functions instead :(
+// and we type that record using a mapped type
+//
 // but this is actually more type safe.
 // if we add a new classifier, we will have to add a new branch to the branches object,
 // and TS will complain if we don't handle it, so we can't forget to handle it
+//
+// there is also a new TS concept here: the 'in' operator
+// we are using it to iterate over the keys of the Classifier type and using that 'CT' key to specify
+// the type of the input and output parameters for each branch function
 
 function genericFunction3<T extends Classifier>(
   input: DiscriminatedUnion<T>
 ): ClassifierValue<T> {
-  
   const branches: {
     [CT in Classifier]: (input: DiscriminatedUnion<CT>) => ClassifierValue<CT>;
   } = {
@@ -109,21 +117,36 @@ const val3 = genericFunction3({
 
 type Unit = 'imperial' | 'metric';
 
+const numberOfInchesInFoot = 12;
+const numberOfCentimetersInMeter = 100;
+const numberOfCentimetersInInch = 2.54;
+const numberOfInchesInCentimeter = 1 / numberOfCentimetersInInch;
+
 // this is fine if there are only two units, but if there are more, we need to use a more flexible approach
-// type UnitMeasurement<U extends Unit> = U extends 'imperial'
-//   ? { feet: number; inches: number }
-//   : { cm: number; m: number };
+type UnitMeasurementUnflexible<U extends Unit> = U extends 'imperial'
+  ? { feet: number; inches: number }
+  : { cm: number; m: number };
 
 // this is the more flexible approach, but it needs to indexed differently
 // UnitMeasurement[Unit] instead of UnitMeasurement<Unit>
-type UnitMeasurement = {
+// but it doesn't enforce that we have to handle all the units in the Unit type
+type UnitMeasurementUnsafe = {
   imperial: { feet: number; inches: number };
   metric: { cm: number; m: number };
-}
+};
+
+// we can improve it a little further by using reintroducing the type variable 'U'
+// this way we can ensure that the UnitMeasurement type is always in sync with the Unit type
+// and we need to handle all the units in the Unit type, otherwise TS will complain
+type UnitMeasurement<U extends Unit> = {
+  imperial: { feet: number; inches: number };
+  metric: { cm: number; m: number };
+}[U];
+//^^ <--- notice we are using the Unit type variable here to index into the UnitMeasurement type
 
 type Height<U extends Unit> = {
   unit: U;
-  measurement: UnitMeasurement[U];
+  measurement: UnitMeasurement<U>;
 };
 
 function multiplyHeight<U extends Unit>(
@@ -134,14 +157,14 @@ function multiplyHeight<U extends Unit>(
     [U in Unit]: (height: Height<U>, multiple: number) => Height<U>;
   } = {
     imperial: (height, multiple) => {
-      const { majorUnitAmount, minorUnitAmount } = multiplyCompoundUnit({
-        startingAmount: {
+      const { majorUnitAmount, minorUnitAmount } = multiplyCompoundUnit(
+        {
           majorUnitAmount: height.measurement.feet,
           minorUnitAmount: height.measurement.inches,
+          majorMinorRatio: numberOfInchesInFoot,
         },
-        majorMinorRatio: 12,
-        multiple,
-      });
+        multiple
+      );
       return {
         unit: height.unit,
         measurement: {
@@ -151,14 +174,14 @@ function multiplyHeight<U extends Unit>(
       };
     },
     metric: (height, multiple) => {
-      const { majorUnitAmount, minorUnitAmount } = multiplyCompoundUnit({
-        startingAmount: {
+      const { majorUnitAmount, minorUnitAmount } = multiplyCompoundUnit(
+        {
           majorUnitAmount: height.measurement.m,
           minorUnitAmount: height.measurement.cm,
+          majorMinorRatio: numberOfCentimetersInMeter,
         },
-        majorMinorRatio: 100,
-        multiple,
-      });
+        multiple
+      );
       return {
         unit: height.unit,
         measurement: {
@@ -169,24 +192,6 @@ function multiplyHeight<U extends Unit>(
     },
   };
   return branches[height.unit](height, multiple);
-}
-
-function multiplyCompoundUnit(args: {
-  startingAmount: {
-    majorUnitAmount: number;
-    minorUnitAmount: number;
-  };
-  majorMinorRatio: number;
-  multiple: number;
-}): { majorUnitAmount: number; minorUnitAmount: number } {
-  const startingAmountInMinorUnit =
-    args.startingAmount.majorUnitAmount * args.majorMinorRatio +
-    args.startingAmount.minorUnitAmount;
-  const finalAmountInMinorUnit = startingAmountInMinorUnit * args.multiple;
-  return {
-    majorUnitAmount: Math.floor(finalAmountInMinorUnit / args.majorMinorRatio),
-    minorUnitAmount: finalAmountInMinorUnit % args.majorMinorRatio,
-  };
 }
 
 const multipledMeters = multiplyHeight(
@@ -216,39 +221,147 @@ type Imperial = {
   classifier: 'imperial';
   feet: number;
   inches: number;
-}
- 
+};
+
 type Metric = {
-  classifier: "metric";
+  classifier: 'metric';
   meters: number;
   centimeters: number;
-}
- 
+};
+
 type Measurement = Imperial | Metric;
 
 function mulitplyMeasurement(
   measurement: Measurement,
-  multiplier: number
+  multiple: number
 ): Measurement {
   if (measurement.classifier === 'imperial') {
-    const multple = multiplyCompoundUnit({
-      startingAmount: {
+    const multple = multiplyCompoundUnit(
+      {
         majorUnitAmount: measurement.feet,
-        minorUnitAmount: measurement.inches},
-      majorMinorRatio: 12,
-      multiple: multiplier,
-    });
-    return {classifier: 'imperial', feet: multple.majorUnitAmount, inches: multple.minorUnitAmount};
+        minorUnitAmount: measurement.inches,
+        majorMinorRatio: numberOfInchesInFoot,
+      },
+      multiple
+    );
+    return {
+      classifier: 'imperial',
+      feet: multple.majorUnitAmount,
+      inches: multple.minorUnitAmount,
+    };
   } else {
-    const multple = multiplyCompoundUnit({
-      startingAmount: {
+    const multple = multiplyCompoundUnit(
+      {
         majorUnitAmount: measurement.meters,
-        minorUnitAmount: measurement.centimeters},
-      majorMinorRatio: 1000,
-      multiple: multiplier,
-    });
+        minorUnitAmount: measurement.centimeters,
+        majorMinorRatio: numberOfCentimetersInMeter,
+      },
+      multiple
+    );
     // there is poor type safety here, because TS doesn't know that the return type is different based on the classifier value
     // this is wrong, it should be 'metric' not 'imperial'
-    return {classifier: 'imperial', feet: multple.majorUnitAmount, inches: multple.minorUnitAmount}; 
+    return {
+      classifier: 'imperial',
+      feet: multple.majorUnitAmount,
+      inches: multple.minorUnitAmount,
+    };
   }
+}
+
+/////////////////////// exercise ///////////////////////////////////////////////////////////////////////////////////////
+/////////////////////// convert height /////////////////////////////////////////////////////////////////////////////////
+
+function convertHeight<U extends Unit>(height: Height<U>): Height<U> {
+  const branches: {
+    [U in Unit]: (height: Height<U>) => Height<U>;
+  } = {
+    imperial: (height) => {
+      const convertedAmount = convertCompoundUnit(
+        {
+          majorUnitAmount: height.measurement.feet,
+          minorUnitAmount: height.measurement.inches,
+          majorMinorRatio: numberOfInchesInFoot,
+        },
+        numberOfCentimetersInMeter,
+        numberOfInchesInCentimeter
+      );
+      return {
+        unit: 'metric',
+        measurement: {
+          m: convertedAmount.majorUnitAmount,
+          cm: convertedAmount.minorUnitAmount,
+        },
+      };
+    },
+    metric: (height) => {
+      const convertedAmount = convertCompoundUnit(
+        {
+          majorUnitAmount: height.measurement.m,
+          minorUnitAmount: height.measurement.cm,
+          majorMinorRatio: numberOfCentimetersInMeter,
+        },
+        numberOfInchesInFoot,
+        numberOfCentimetersInInch
+      );
+      return {
+        unit: 'imperial',
+        measurement: {
+          feet: convertedAmount.majorUnitAmount,
+          inches: convertedAmount.minorUnitAmount,
+        },
+      };
+    },
+  };
+  return branches[height.unit](height);
+}
+
+////// helper functions ///////////////////////////////////////////////////////////////////////////////////////
+
+type CompoundMeasurement = {
+  majorUnitAmount: number;
+  minorUnitAmount: number;
+  majorMinorRatio: number;
+};
+
+function convertAmountToMinorUnit(amount: CompoundMeasurement): number {
+  return (
+    amount.majorUnitAmount * amount.majorMinorRatio + amount.minorUnitAmount
+  );
+}
+
+function convertMinorUnitToAmount(
+  minorUnitAmount: number,
+  majorMinorRatio: number
+): CompoundMeasurement {
+  return {
+    majorUnitAmount: Math.floor(minorUnitAmount / majorMinorRatio),
+    minorUnitAmount: minorUnitAmount % majorMinorRatio,
+    majorMinorRatio,
+  };
+}
+
+function multiplyCompoundUnit(
+  amount: CompoundMeasurement,
+  multiple: number
+): CompoundMeasurement {
+  const startingAmountInMinorUnit = convertAmountToMinorUnit(amount);
+  const finalAmountInMinorUnit = startingAmountInMinorUnit * multiple;
+  return convertMinorUnitToAmount(
+    finalAmountInMinorUnit,
+    amount.majorMinorRatio
+  );
+}
+
+function convertCompoundUnit(
+  amount: CompoundMeasurement,
+  outputMajorMinorRatio: number,
+  conversionRatioMinorUnit: number
+): CompoundMeasurement {
+  const startingAmountInMinorUnit = convertAmountToMinorUnit(amount);
+  const finalAmountInMinorUnit =
+    startingAmountInMinorUnit * conversionRatioMinorUnit;
+  return convertMinorUnitToAmount(
+    finalAmountInMinorUnit,
+    outputMajorMinorRatio
+  );
 }
