@@ -19,10 +19,7 @@ export default [
       'arrow-parens': [2, 'always'],
       'linebreak-style': ['error', 'unix'],
       semi: ['error', 'always'],
-      '@typescript-eslint/no-unused-vars': [
-        'never',
-        { argsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': ['off', { argsIgnorePattern: '^_' }],
     },
   },
   {
