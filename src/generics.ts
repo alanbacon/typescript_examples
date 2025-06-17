@@ -20,12 +20,11 @@ const val3 = identity<string>(9); // TS now complains that the input isn't of th
 
 ////////////////////////////////////////////////////////////////////
 
-// narrowing/contraint 
+// narrowing/contraint
 // its like saying "at minimum, the Type must have a property called 'foo' of type number"
 //
 // (this second way the extends keyword can be used, the first way is
 // to simply add to an interface, we havn't discussed this yet)
-
 
 function useFooProp<Type extends { foo: number }>(arg: Type): Type {
   console.log(arg.foo);
@@ -97,3 +96,13 @@ const val7 = extractValue({
   classifier: 'barNumber',
   value: 9,
 });
+
+// In summary:
+//
+// We are familiar with how to use type variables to contruct more complex types,
+//
+// We are now familiar with the 3 ways the extends keyword can be used:
+// 1. to extend an interface or type with additional properties
+//        (we didn't actually cover this in detail, but it is a common use case)
+// 2. to constrain a type variable to a specific type or interface
+// 3. to create conditional types that return different types based on whether a type extends another type

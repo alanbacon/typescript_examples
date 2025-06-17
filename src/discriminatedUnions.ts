@@ -115,21 +115,25 @@ const val3 = genericFunction3({
 
 // more real world example
 
-type Unit = 'imperial' | 'metric';
-
 const numberOfInchesInFoot = 12;
 const numberOfCentimetersInMeter = 100;
 const numberOfCentimetersInInch = 2.54;
 const numberOfInchesInCentimeter = 1 / numberOfCentimetersInInch;
 
-// this is fine if there are only two units, but if there are more, we need to use a more flexible approach
+type Unit = 'imperial' | 'metric';
+
+// this is fine if there are only two units, but if there are more,
+// there is a better approach than nesting many ternary extends operators
+// together
 type UnitMeasurementUnflexible<U extends Unit> = U extends 'imperial'
   ? { feet: number; inches: number }
-  : { cm: number; m: number };
+  : U extends 'metric'
+    ? { cm: number; m: number }
+    : { otherMeasurementSystemUnit: number };
 
 // this is the more flexible approach, but it needs to indexed differently
 // UnitMeasurement[Unit] instead of UnitMeasurement<Unit>
-// but it doesn't enforce that we have to handle all the units in the Unit type
+// it also doesn't enforce that we have to handle all the units in the Unit type
 type UnitMeasurementUnsafe = {
   imperial: { feet: number; inches: number };
   metric: { cm: number; m: number };
