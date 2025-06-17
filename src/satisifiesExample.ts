@@ -30,7 +30,7 @@ type UsefulTypeSatisifies = Satisfies<
 // similar to writing:
 type UsefulTypeExtends = BaseType & { anotherProp: WeirdClass };
 
-// or 
+// or
 // (this is first way the extends keyword can be used):
 interface UsefulInterface extends BaseType {
   anotherProp: WeirdClass;
@@ -69,17 +69,34 @@ type RestrictedUsefulTypeOK = Satisfies<
 // if you want to work directly with objects instead of types, you can use the `satisfies` operator
 
 const unacceptableObjectInstance = {
-    mustHaveFoo: false,
-    mustHaveBar: 3,
-    anotherProp: new WeirdClass(),
-  } satisfies RestrictedBaseType;
+  mustHaveFoo: false,
+  mustHaveBar: 3,
+  anotherProp: new WeirdClass(),
+} satisfies RestrictedBaseType;
 
 const acceptableObjectInstance = {
-    mustHaveFoo: false,
-    mustHaveBar: 3,
-    stringProp: 's',
-  } satisfies RestrictedBaseType;
+  mustHaveFoo: false,
+  mustHaveBar: 3,
+  stringProp: 's',
+} satisfies RestrictedBaseType;
 
 // intellisense knows stringProp is now a string
 // it isnt only aware of the RestrictedBaseType type, but also the type of any extra properties that are added
 acceptableObjectInstance.stringProp = 9;
+
+// we don't get this level of intellisense without the `satisfies` operator
+const unawareObjectInstance: RestrictedBaseType = {
+  mustHaveFoo: false,
+  mustHaveBar: 3,
+  stringProp: 's',
+};
+
+unawareObjectInstance.stringProp = 9;
+
+// In summary:
+//
+// the Satisfies type helper is a safe way to extend a base type
+// while ensuring that the extended type adheres to the constraints of the base type.
+//
+// the satisfies operator is a safe way to extend an object from a base type
+// while ensuring that the extended object adheres to the constraints of the base type.
