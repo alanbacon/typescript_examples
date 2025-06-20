@@ -28,6 +28,7 @@ const arrayOfJustFish = arrayOfPets.filter(
 );
 
 ///////////////////////////////////////////////////////////////////////////////////
+// How to use the unknown type effectively with type predicates
 
 export function isError(err: unknown): err is Error {
   return err instanceof Error;
