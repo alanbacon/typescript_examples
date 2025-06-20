@@ -81,9 +81,18 @@ type ClassifierValue<T extends Classifier> = T extends 'fooString'
     string
   : number;
 
+//e.g.
+type ClassifierValueIsString = ClassifierValue<'fooString'>; // string
+
 type DiscriminatedUnion<T extends Classifier> = {
   classifier: T; // 'fooString' | 'barNumber'
   value: ClassifierValue<T>; // string | number
+};
+
+// e.g.
+const exampleObj: DiscriminatedUnion<'fooString'> = {
+  classifier: 'fooString',
+  value: 'hello world',
 };
 
 function extractValue<T extends Classifier>(
