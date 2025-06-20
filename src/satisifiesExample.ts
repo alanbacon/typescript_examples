@@ -100,3 +100,8 @@ unawareObjectInstance.stringProp = 9;
 //
 // the satisfies operator is a safe way to extend an object from a base type
 // while ensuring that the extended object adheres to the constraints of the base type.
+//
+// much better than using the 'as' keyword.
+//
+// there is a slightly different use case for the `satisfies` operator here:
+// https://www.reddit.com/r/webdev/comments/zrt1rb/the_satisfies_operator_in_typescript_49_is_a_game/
