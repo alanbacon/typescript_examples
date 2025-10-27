@@ -44,6 +44,13 @@ type DiscriminatedUnion<T extends Classifier> = {
   value: ClassifierValue<T>;
 };
 
+type DiscriminatedUnionMap = {
+  [T in Classifier]: DiscriminatedUnion<T>;
+}
+
+// same as DiscriminatedUnion<'fooString'> | DiscriminatedUnion<'barNumber'>
+type DiscriminatedUnionDiscriminated = DiscriminatedUnionMap[Classifier];
+
 /////////////////////// Attempt 1 //////////////////////////////////////////////////////////////////////////////////////
 
 function genericFunction1<T extends Classifier>(
@@ -65,7 +72,7 @@ const val1 = genericFunction1({ classifier: 'fooString', value: 'foo' });
 // essentially the same as the example from the TS docs using our new types
 
 function genericFunction2(
-  input: DiscriminatedUnion<'fooString'> | DiscriminatedUnion<'barNumber'>
+  input: DiscriminatedUnionDiscriminated // same as DiscriminatedUnion<'fooString'> | DiscriminatedUnion<'barNumber'>
 ): string | number {
   if (input.classifier === 'fooString') {
     return input.value[0];
